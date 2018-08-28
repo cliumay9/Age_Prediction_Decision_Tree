@@ -1,0 +1,110 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+# install.packages('rpart', 'rpart.plot')
+library(rpart)
+library(rpart.plot)
+```
+
+# 1: Data Mining Marketing
+
+## Solution
+
+```{r}
+age = read.csv('./Data/age.csv')
+```
+
+
+```{r}
+# Turn the predictors into qualitative variables.
+age[] = lapply(age, factor)
+  col_names = names(age)
+
+```
+
+```{r message=FALSE, include=FALSE}
+rpart.control(maxdepth = 5, minsplit = 2, minbucket = 2)
+```
+
+
+```{r}
+fit = rpart(age~., age)
+```
+
+```{r}
+printcp(fit)
+```
+
+Rode node error is used to measure cross validated error. ( xerror * root node error)
+0.63816 x 0.7504 = *0.4788753* is the cross validated error rate. 
+
+```{r}
+rpart.plot(fit)
+```
+Based on the above classificaiton tree, the rightest children node was classified as "7", indicating age 65 and over; the previous node concluded that if a person is retired, he/she will most likely be "65 and over" 63% of the time - this is generally true. 
+
+On the other hand, for people who are less educated (say, Grade 11 or less), they are "17 and under" 74% of the time. Interestingly For people who are slightly more educated (High school or above) and living in apartment, they are "18 thru 24" 82% of the time. 
+
+Trivially, People who are single/never married or living together/not married are generally younger. 
+
+On the other side, people who aren't retired that rents or live with family are usually in their mid 20s (refer 2nd and 5th child nodes). What's more, people who own a house are usually "35 thru 44" (Peak career) 34% of the time. Apparently people who are in the career's peak will definitely own house while people who are 25 thru 34 either rent or live with their parents.
+
+There is a clear cut in occupation, retired and not retired On the 7th node, people who are old enough yet not too old to retire usually have a good amount of under 18 persons in household.
+
+Gender seems to not play a role to determine age, so as Dual incomes, Duration of living in SF/Oakland/SJ, ethnicity, and language. However, I believe as we increase the depth of our tree, dual incomes, and duration of living in SF/SJ will play a good amount of role in determining of age. On the other hand, ethnicity and language seems to have some sort of dependency that will affect our tree model due to their interaction.
+
+(a) Were surrogate splits used in the construction of the optimal tree you obtained? What does a surrogate split mean? Give an example of a surrogate split from your optimal deciison tree. Which variable is the split on? WHich variable(s) is the surrogate split on?
+
+```{r}
+sum(is.na(age$Edu))
+sum(is.na(age$Income))
+sum(is.na(age$LiveBA))
+sum(is.na(age$Persons))
+sum(is.na(age$HouseStat))
+sum(is.na(age$Ethnic))
+sum(is.na(age$Lang))
+```
+
+Yes we did because we have missing data in Edu, Income, LiveBA, Persons, HouseStat, Ethnic, and Lang(see above). A surrogate split is usually used to handle missing data where imputing missing varbles are not good. First approach was to create a surrogate variable that says whether that entry contains "missing" information or not. The second approach is to construct a surrogate variable that depends on other correlated predictors. 
+
+In our decision tree, we made our surrogate split on Edu, Income, LiveBA, Persons, HouseStat, Ethnic and Lang. For example, there is a correlation between ethnic and lang so we can construct a surrogate variable that explains them.
+
+(b) Use your optimal decision tree, predict your age.
+
+
+I am single, MS in Applied math graduate, living in a rental apartment, and earning more than 20k. According to the tree, I belong to group 3, i.e.25 thru 34 while I am turning 24 on May9th. To be honest, it is fairly accurate. Out of that child node, 25% were tagged with group 2(18~24). 
+
+
+# 2: Multi-Class Classificaiton Marketing Data.
+
+
+```{r}
+housetype = read.csv('housetype_stats315B.csv')
+```
+
+```{r}
+# Turn the predictors into qualitative variables.
+housetype[] = lapply(housetype, factor)
+  col_names = names(housetype)
+
+```
+
+```{r}
+# fit the tree to the data
+fit = rpart(TypeHome~., housetype)
+```
+
+
+```{r}
+rpart.plot(fit)
+```
+People who own a house or live with family usually are the ones who live in the house. That's trivial; If you live in a house you most likely own a house or live with someone who owns it. 
+
+On the other side, if the number of house hold is large, it suggests that they are living in an aparment while if the number of household is small and their income is high, they can most likely afford a house rather than apartment. 
+
+```{r}
+printcp(fit)
+```
+We have a misclassificaiton error of 0.40985. However, since most of the labels were "1", i.e. "House." It creates an imbalanced classes, which likely causes overfitting, because we don't have much samples for "2","4", and "5". For this reason, some subsampling strategies can be implemented to alleviate imblanced classes issue. 
