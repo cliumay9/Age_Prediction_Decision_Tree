@@ -81,7 +81,7 @@ I am single, MS in Applied math graduate, living in a rental apartment, and earn
 
 
 ```{r}
-housetype = read.csv('housetype_stats315B.csv')
+housetype = read.csv('./Data/housetype.csv')
 ```
 
 ```{r}
